@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Win-Back Re-engagement Scorer</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#F5F4EF;
+    --panel:#FFFFFF;
+    --ink:#12242A;
+    --ink-soft:#4E5E63;
+    --line:#E1DED3;
+    --hot:#C1461B;
+    --hot-bg:#FBE9E1;
+    --warm:#B98418;
+    --warm-bg:#FCF1DA;
+    --cool:#3E6E71;
+    --cool-bg:#E3EEEE;
+    --beacon:#12242A;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--ink);
+    font-family:'Inter',sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:1180px;margin:0 auto;padding:48px 32px 80px;}
+  .eyebrow{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:12px;
+    letter-spacing:0.12em;
+    text-transform:uppercase;
+    color:var(--ink-soft);
+    margin-bottom:14px;
+  }
+  h1{
+    font-family:'Fraunces',serif;
+    font-weight:500;
+    font-size:44px;
+    line-height:1.08;
+    margin:0 0 14px;
+    letter-spacing:-0.01em;
+  }
+  .lede{
+    font-size:16px;
+    color:var(--ink-soft);
+    max-width:640px;
+    line-height:1.55;
+    margin:0 0 36px;
+  }
+  .stat-row{
+    display:flex;
+    gap:0;
+    border-top:1px solid var(--line);
+    border-bottom:1px solid var(--line);
+    margin-bottom:40px;
+  }
+  .stat{
+    flex:1;
+    padding:18px 24px;
+    border-right:1px solid var(--line);
+  }
+  .stat:last-child{border-right:none;}
+  .stat-num{
+    font-family:'Fraunces',serif;
+    font-size:30px;
+    font-weight:500;
+  }
+  .stat-label{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:11px;
+    letter-spacing:0.08em;
+    text-transform:uppercase;
+    color:var(--ink-soft);
+    margin-top:4px;
+  }
+
+  .chart-panel{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:2px;
+    padding:32px;
+    margin-bottom:40px;
+  }
+  .chart-head{
+    display:flex;
+    justify-content:space-between;
+    align-items:baseline;
+    margin-bottom:20px;
+    flex-wrap:wrap;
+    gap:10px;
+  }
+  .chart-title{
+    font-family:'Fraunces',serif;
+    font-size:20px;
+    font-weight:500;
+  }
+  .chart-sub{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:11px;
+    color:var(--ink-soft);
+    letter-spacing:0.02em;
+  }
+  svg{display:block;width:100%;height:auto;}
+  .quad-label{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:10.5px;
+    letter-spacing:0.06em;
+    text-transform:uppercase;
+    fill:var(--ink-soft);
+  }
+  .axis-label{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:11px;
+    fill:var(--ink-soft);
+    letter-spacing:0.04em;
+  }
+  .dot{cursor:pointer;stroke:#fff;stroke-width:1.5;transition:opacity .15s;}
+  .dot:hover{stroke-width:2.5;}
+  .dot.dim{opacity:0.18;}
+
+  .legend{display:flex;gap:18px;margin-top:18px;flex-wrap:wrap;}
+  .legend-item{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--ink-soft);font-family:'IBM Plex Mono',monospace;}
+  .legend-dot{width:9px;height:9px;border-radius:50%;display:inline-block;}
+
+  .controls{
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+    margin-bottom:20px;
+  }
+  select{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:12px;
+    padding:9px 12px;
+    border:1px solid var(--line);
+    background:var(--panel);
+    color:var(--ink);
+    border-radius:2px;
+    cursor:pointer;
+  }
+  select:focus{outline:2px solid var(--ink);outline-offset:1px;}
+
+  table{
+    width:100%;
+    border-collapse:collapse;
+    background:var(--panel);
+    border:1px solid var(--line);
+  }
+  thead th{
+    text-align:left;
+    font-family:'IBM Plex Mono',monospace;
+    font-size:10.5px;
+    letter-spacing:0.06em;
+    text-transform:uppercase;
+    color:var(--ink-soft);
+    padding:12px 14px;
+    border-bottom:1px solid var(--line);
+    cursor:pointer;
+    white-space:nowrap;
+  }
+  thead th:hover{color:var(--ink);}
+  tbody tr{border-bottom:1px solid var(--line);cursor:pointer;}
+  tbody tr:last-child{border-bottom:none;}
+  tbody tr:hover{background:#FAFAF7;}
+  tbody td{padding:13px 14px;font-size:13.5px;vertical-align:middle;}
+  .acct-name{font-weight:600;}
+  .acct-meta{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--ink-soft);}
+  .tier-pill{
+    display:inline-block;
+    font-family:'IBM Plex Mono',monospace;
+    font-size:10.5px;
+    letter-spacing:0.05em;
+    text-transform:uppercase;
+    padding:3px 9px;
+    border-radius:20px;
+  }
+  .tier-Hot{background:var(--hot-bg);color:var(--hot);}
+  .tier-Warm{background:var(--warm-bg);color:var(--warm);}
+  .tier-Cool{background:var(--cool-bg);color:var(--cool);}
+  .score-bar-track{width:80px;height:5px;background:var(--line);border-radius:3px;overflow:hidden;display:inline-block;vertical-align:middle;margin-right:8px;}
+  .score-bar-fill{height:100%;border-radius:3px;}
+  .detail-row td{background:#FAFAF7;padding:0;}
+  .detail-inner{padding:18px 24px 22px;font-size:13px;line-height:1.6;display:none;}
+  .detail-inner.open{display:block;}
+  .detail-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:22px;margin-bottom:14px;}
+  .detail-col-label{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:0.06em;text-transform:uppercase;color:var(--ink-soft);margin-bottom:6px;}
+  .rec-box{border-left:3px solid var(--ink);padding:10px 16px;background:#fff;font-size:13px;}
+  .factor-row{display:flex;justify-content:space-between;padding:3px 0;font-size:12.5px;}
+  .factor-name{color:var(--ink-soft);}
+
+  footer{margin-top:44px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--ink-soft);border-top:1px solid var(--line);padding-top:18px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="eyebrow">Retention &amp; Win-Back / Synthetic Data</div>
+  <h1>Win-Back Re-engagement Scorer</h1>
+  <p class="lede">Ranks churned accounts on likelihood of successful reactivation, then weighs that against account value to show where a scaled win-back motion should actually spend its effort first.</p>
+
+  <div class="stat-row" id="statRow"></div>
+
+  <div class="chart-panel">
+    <div class="chart-head">
+      <div class="chart-title">Priority Quadrant &mdash; Likelihood vs. Value</div>
+      <div class="chart-sub">DOT SIZE = MRR AT CHURN &nbsp;·&nbsp; CLICK A DOT TO JUMP TO ITS ROW</div>
+    </div>
+    <svg id="quadSvg" viewBox="0 0 900 480"></svg>
+    <div class="legend">
+      <span class="legend-item"><span class="legend-dot" style="background:#C1461B"></span>Hot &mdash; save now, offer-led outreach</span>
+      <span class="legend-item"><span class="legend-dot" style="background:#B98418"></span>Warm &mdash; nurture cadence, check back in</span>
+      <span class="legend-item"><span class="legend-dot" style="background:#3E6E71"></span>Cool &mdash; low-touch, monitor only</span>
+    </div>
+  </div>
+
+  <div class="controls">
+    <select id="fTier">
+      <option value="all">All tiers</option>
+      <option value="Hot">Hot only</option>
+      <option value="Warm">Warm only</option>
+      <option value="Cool">Cool only</option>
+    </select>
+    <select id="fReason">
+      <option value="all">All churn reasons</option>
+    </select>
+    <select id="fMrr">
+      <option value="all">All MRR bands</option>
+      <option value="lt300">Under $300/mo</option>
+      <option value="300to800">$300&ndash;$800/mo</option>
+      <option value="gt800">$800+/mo</option>
+    </select>
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th data-sort="name">Account</th>
+        <th data-sort="reason">Churn reason</th>
+        <th data-sort="tenure">Tenure</th>
+        <th data-sort="sinceChurn">Since churn</th>
+        <th data-sort="mrr">MRR at churn</th>
+        <th data-sort="score">Win-back score</th>
+        <th data-sort="tier">Tier</th>
+      </tr>
+    </thead>
+    <tbody id="tbody"></tbody>
+  </table>
+
+  <footer>Synthetic dataset generated for portfolio demonstration &middot; no real customer data used &middot; scoring weights are illustrative and would be calibrated against historical win-back outcomes in production</footer>
+</div>
+
+<script>
+// ---------- synthetic data generation ----------
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;var t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+var rand = mulberry32(87231);
+
+var firstWords = ["Bright","Summit","Riverside","Clearview","North","Maple","Harbor","Copper","Willow","Granite","Cedar","Vista","Union","Foothill","Lakeside","Ridgeline","Parkway","Crescent","Meadow","Stonebridge","Southgate","Eastwood","Hollow","Pinecrest","Brookfield","Amber","Coastal","Highland","Westgate","Terrace","Ironview","Sable","Redwood","Anchor","Fieldstone","Juniper","Elm","Bayview","Prairie","Blackstone","Sundial","Chapel","Milton","Delta","Rosewood","Windermere"];
+var bizTypes = [
+  "Fitness Studio","Law Group","Veterinary Clinic","Auto Repair","Salon & Spa","Marketing Agency",
+  "Accounting Firm","HVAC Services","Landscaping Co","Physical Therapy","Design Studio","Property Management",
+  "IT Consulting","Insurance Agency","Real Estate Group","Catering Co","Print Shop","Staffing Agency",
+  "Dental Group","Logistics Co","Event Planning","Home Cleaning Co"
+];
+function acctName(i, r){return firstWords[i % firstWords.length] + " " + bizTypes[Math.floor(r*bizTypes.length)];}
+
+var reasons = [
+  {key:"Price / budget", reversibility:0.85},
+  {key:"Support issue", reversibility:0.75},
+  {key:"Lost champion", reversibility:0.55},
+  {key:"Low engagement", reversibility:0.4},
+  {key:"Product fit gap", reversibility:0.3},
+  {key:"Switched to competitor", reversibility:0.2}
+];
+
+var accounts = [];
+for(var i=0;i<42;i++){
+  var acctNameStr = acctName(i, rand());
+  var reason = reasons[Math.floor(rand()*reasons.length)];
+  var tenureMonths = Math.round(4 + rand()*44);
+  var sinceChurnMonths = Math.round(1 + rand()*23);
+  var preChurnEngagement = rand(); // 0-1, depth of usage before churn
+  var mrr = Math.round((120 + rand()*1400)/10)*10;
+
+  // --- recency curve: peaks around 4-10 months since churn ---
+  var recencyScore;
+  if(sinceChurnMonths < 3) recencyScore = 0.35 + sinceChurnMonths*0.08;
+  else if(sinceChurnMonths <= 10) recencyScore = 0.85 + rand()*0.15;
+  else if(sinceChurnMonths <= 16) recencyScore = 0.85 - (sinceChurnMonths-10)*0.07;
+  else recencyScore = Math.max(0.15, 0.5 - (sinceChurnMonths-16)*0.05);
+  recencyScore = Math.min(1, Math.max(0, recencyScore));
+
+  var tenureScore = Math.min(1, tenureMonths/36);
+
+  var likelihood = (
+    reason.reversibility * 0.35 +
+    recencyScore * 0.25 +
+    preChurnEngagement * 0.25 +
+    tenureScore * 0.15
+  );
+  likelihood = Math.min(0.97, Math.max(0.04, likelihood + (rand()-0.5)*0.08));
+
+  var score = Math.round(likelihood*100);
+  var tier = score >= 68 ? "Hot" : score >= 42 ? "Warm" : "Cool";
+
+  accounts.push({
+    id:i, name:acctNameStr, reason:reason.key, reversibility:reason.reversibility,
+    tenure:tenureMonths, sinceChurn:sinceChurnMonths, engagement:preChurnEngagement,
+    mrr:mrr, score:score, likelihood:likelihood, tier:tier
+  });
+}
+
+// ---------- recommendations ----------
+var tierRec = {
+  Hot: {
+    cadence:"Direct outreach within 2 weeks &mdash; phone or 1:1 email from a CSM, not an automated sequence.",
+    offer:"Lead with a reactivation offer tied to the churn reason (e.g. pricing flexibility for budget churn, a fresh onboarding lap for lost-champion accounts).",
+    owner:"Retention Specialist, prioritized this cycle"
+  },
+  Warm: {
+    cadence:"3-touch nurture cadence over 6 weeks &mdash; value-reminder content, then a light check-in, then a soft offer.",
+    offer:"Hold the reactivation discount in reserve; test relationship-first outreach before leading with price.",
+    owner:"Scaled Adoption Specialist, automated sequence with manual review at touch 3"
+  },
+  Cool: {
+    cadence:"Low-touch quarterly monitor &mdash; include in win-back email digest only, no dedicated outreach.",
+    offer:"No offer until a positive signal appears (site visit, referral, review of new features).",
+    owner:"CS Ops, automated only"
+  }
+};
+
+// ---------- populate reason filter ----------
+var fReason = document.getElementById('fReason');
+reasons.forEach(function(r){
+  var o=document.createElement('option'); o.value=r.key; o.textContent=r.key; fReason.appendChild(o);
+});
+
+// ---------- stat row ----------
+function renderStats(list){
+  var hot = list.filter(a=>a.tier==='Hot').length;
+  var totalMrr = list.reduce((s,a)=>s+a.mrr,0);
+  var hotMrr = list.filter(a=>a.tier==='Hot').reduce((s,a)=>s+a.mrr,0);
+  var avgScore = list.length ? Math.round(list.reduce((s,a)=>s+a.score,0)/list.length) : 0;
+  var stats = [
+    {n:list.length, l:"Churned accounts scored"},
+    {n:hot, l:"Hot-tier accounts"},
+    {n:"$"+hotMrr.toLocaleString(), l:"MRR at stake, hot tier"},
+    {n:avgScore, l:"Avg win-back score"}
+  ];
+  document.getElementById('statRow').innerHTML = stats.map(s=>
+    '<div class="stat"><div class="stat-num">'+s.n+'</div><div class="stat-label">'+s.l+'</div></div>'
+  ).join('');
+}
+
+// ---------- quadrant chart ----------
+var tierColor = {Hot:"#C1461B", Warm:"#B98418", Cool:"#3E6E71"};
+function renderChart(list){
+  var W=900,H=480,pad={l:60,r:30,t:20,b:50};
+  var innerW=W-pad.l-pad.r, innerH=H-pad.t-pad.b;
+  var maxMrr = Math.max(...accounts.map(a=>a.mrr));
+  var svg = document.getElementById('quadSvg');
+  var parts = [];
+  parts.push('<line x1="'+pad.l+'" y1="'+pad.t+'" x2="'+pad.l+'" y2="'+(H-pad.b)+'" stroke="#D8D5C8"/>');
+  parts.push('<line x1="'+pad.l+'" y1="'+(H-pad.b)+'" x2="'+(W-pad.r)+'" y2="'+(H-pad.b)+'" stroke="#D8D5C8"/>');
+  var midX = pad.l + innerW/2, midY = pad.t + innerH/2;
+  parts.push('<line x1="'+midX+'" y1="'+pad.t+'" x2="'+midX+'" y2="'+(H-pad.b)+'" stroke="#EBE8DC" stroke-dasharray="3,4"/>');
+  parts.push('<line x1="'+pad.l+'" y1="'+midY+'" x2="'+(W-pad.r)+'" y2="'+midY+'" stroke="#EBE8DC" stroke-dasharray="3,4"/>');
+
+  parts.push('<text class="quad-label" x="'+(W-pad.r-8)+'" y="'+(pad.t+20)+'" text-anchor="end">Priority save</text>');
+  parts.push('<text class="quad-label" x="'+(pad.l+8)+'" y="'+(pad.t+20)+'" text-anchor="start">Nurture</text>');
+  parts.push('<text class="quad-label" x="'+(W-pad.r-8)+'" y="'+(H-pad.b-10)+'" text-anchor="end">Efficient wins</text>');
+  parts.push('<text class="quad-label" x="'+(pad.l+8)+'" y="'+(H-pad.b-10)+'" text-anchor="start">Deprioritize</text>');
+
+  parts.push('<text class="axis-label" x="'+(pad.l+innerW/2)+'" y="'+(H-14)+'" text-anchor="middle">WIN-BACK LIKELIHOOD &rarr;</text>');
+  parts.push('<text class="axis-label" x="16" y="'+(pad.t+innerH/2)+'" text-anchor="middle" transform="rotate(-90 16 '+(pad.t+innerH/2)+')">MRR AT CHURN &rarr;</text>');
+
+  var activeTier = document.getElementById('fTier').value;
+
+  list.forEach(function(a){
+    var x = pad.l + a.likelihood*innerW;
+    var y = (H-pad.b) - (a.mrr/maxMrr)*innerH;
+    var r = 4 + (a.mrr/maxMrr)*14;
+    var dim = (activeTier!=='all' && a.tier!==activeTier);
+    parts.push('<circle class="dot'+(dim?' dim':'')+'" data-id="'+a.id+'" cx="'+x.toFixed(1)+'" cy="'+y.toFixed(1)+'" r="'+r.toFixed(1)+'" fill="'+tierColor[a.tier]+'" fill-opacity="0.82"><title>'+a.name+' &middot; score '+a.score+' &middot; $'+a.mrr+'/mo</title></circle>');
+  });
+
+  svg.innerHTML = parts.join('');
+  svg.querySelectorAll('.dot').forEach(function(dot){
+    dot.addEventListener('click', function(){
+      var id = this.getAttribute('data-id');
+      var row = document.querySelector('tr[data-id="'+id+'"]');
+      if(row){ row.scrollIntoView({behavior:'smooth',block:'center'}); row.click(); }
+    });
+  });
+}
+
+// ---------- table ----------
+var sortState = {key:'score', dir:-1};
+function applyFilters(){
+  var tier = document.getElementById('fTier').value;
+  var reason = document.getElementById('fReason').value;
+  var mrrBand = document.getElementById('fMrr').value;
+  return accounts.filter(function(a){
+    if(tier!=='all' && a.tier!==tier) return false;
+    if(reason!=='all' && a.reason!==reason) return false;
+    if(mrrBand==='lt300' && a.mrr>=300) return false;
+    if(mrrBand==='300to800' && (a.mrr<300||a.mrr>800)) return false;
+    if(mrrBand==='gt800' && a.mrr<=800) return false;
+    return true;
+  });
+}
+
+function renderTable(){
+  var list = applyFilters();
+  list.sort(function(a,b){
+    var k=sortState.key;
+    if(a[k]<b[k]) return -1*sortState.dir;
+    if(a[k]>b[k]) return 1*sortState.dir;
+    return 0;
+  });
+  renderStats(list);
+  renderChart(list);
+
+  var tbody = document.getElementById('tbody');
+  tbody.innerHTML = '';
+  list.forEach(function(a){
+    var tr = document.createElement('tr');
+    tr.setAttribute('data-id', a.id);
+    tr.innerHTML =
+      '<td class="acct-name">'+a.name+'</td>'+
+      '<td>'+a.reason+'</td>'+
+      '<td class="acct-meta">'+a.tenure+' mo</td>'+
+      '<td class="acct-meta">'+a.sinceChurn+' mo ago</td>'+
+      '<td class="acct-meta">$'+a.mrr.toLocaleString()+'/mo</td>'+
+      '<td><span class="score-bar-track"><span class="score-bar-fill" style="width:'+a.score+'%;background:'+tierColor[a.tier]+'"></span></span>'+a.score+'</td>'+
+      '<td><span class="tier-pill tier-'+a.tier+'">'+a.tier+'</span></td>';
+
+    var detailTr = document.createElement('tr');
+    detailTr.className = 'detail-row';
+    var rec = tierRec[a.tier];
+    detailTr.innerHTML = '<td colspan="7"><div class="detail-inner">'+
+      '<div class="detail-grid">'+
+        '<div><div class="detail-col-label">Score factors</div>'+
+          '<div class="factor-row"><span class="factor-name">Churn reason reversibility</span><span>'+Math.round(a.reversibility*100)+'%</span></div>'+
+          '<div class="factor-row"><span class="factor-name">Recency window fit</span><span>'+a.sinceChurn+' mo since churn</span></div>'+
+          '<div class="factor-row"><span class="factor-name">Pre-churn engagement depth</span><span>'+Math.round(a.engagement*100)+'%</span></div>'+
+          '<div class="factor-row"><span class="factor-name">Tenure before churn</span><span>'+a.tenure+' mo</span></div>'+
+        '</div>'+
+        '<div><div class="detail-col-label">Recommended cadence</div><div style="font-size:12.5px;line-height:1.55;">'+rec.cadence+'</div></div>'+
+        '<div><div class="detail-col-label">Recommended offer</div><div style="font-size:12.5px;line-height:1.55;">'+rec.offer+'</div></div>'+
+      '</div>'+
+      '<div class="rec-box"><strong>Owner:</strong> '+rec.owner+'</div>'+
+    '</div></td>';
+
+    tr.addEventListener('click', function(){
+      var open = detailTr.querySelector('.detail-inner').classList.toggle('open');
+    });
+
+    tbody.appendChild(tr);
+    tbody.appendChild(detailTr);
+  });
+}
+
+document.querySelectorAll('th[data-sort]').forEach(function(th){
+  th.addEventListener('click', function(){
+    var key = th.getAttribute('data-sort');
+    if(sortState.key===key) sortState.dir *= -1;
+    else { sortState.key = key; sortState.dir = -1; }
+    renderTable();
+  });
+});
+['fTier','fReason','fMrr'].forEach(function(id){
+  document.getElementById(id).addEventListener('change', renderTable);
+});
+
+renderTable();
+</script>
+</body>
+</html>
