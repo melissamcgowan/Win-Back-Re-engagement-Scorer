@@ -2,13 +2,11 @@
 
 An interactive tool that ranks churned customer accounts by likelihood of successful reactivation, then weighs that likelihood against account value to show a retention team where a win-back motion should actually spend its effort first.
 
-**[Live demo →](#)** *(update with your hosted link)*
-
-![Win-Back Scorer preview](#) *(add a screenshot before publishing)*
+**[Live demo →](#)** (https://github.com/melissamcgowan/Win-Back-Re-engagement-Scorer/blob/main/winback_scorer.html)
 
 ## Why I built this
 
-Ranking churned accounts by "most recent" or "highest MRR" alone tends to waste outreach on the wrong accounts — a high-value account that churned to a competitor is a much worse bet than a mid-size account that left over a support issue that's since been fixed. This project models that distinction directly, so the output is a prioritized action list, not just a sorted table.
+Ranking churned accounts by "most recent" or "highest MRR" alone tends to waste outreach on the wrong accounts; a high-value account that churned to a competitor is a much worse bet than a mid-size account that left over a support issue that's since been fixed. This project models that distinction directly, so the output is a prioritized action list, not just a sorted table.
 
 ## How the scoring works
 
@@ -17,7 +15,7 @@ Each churned account gets a composite score (0–100) built from four weighted f
 | Factor | Weight | Why it matters |
 |---|---|---|
 | **Churn reason reversibility** | 35% | Price/support-driven churn is far more winnable than a competitor switch or a fundamental product-fit gap |
-| **Recency window** | 25% | Reactivation likelihood peaks 4–10 months after churn — too soon and the reason is still raw, too late and the account has moved on |
+| **Recency window** | 25% | Reactivation likelihood peaks 4–10 months after churn; too soon and the reason is still raw, too late and the account has moved on |
 | **Pre-churn engagement depth** | 25% | Accounts that were genuinely using the product before they left have more to reactivate than accounts that were already disengaged |
 | **Tenure before churn** | 15% | Longer relationships carry more equity and familiarity to rebuild from |
 
@@ -27,7 +25,7 @@ The headline visual is a **priority quadrant**: win-back likelihood on one axis,
 
 ## Tech
 
-Single-file HTML/CSS/JS — no build step, no dependencies. Data is synthetic, generated with a seeded random function so results are reproducible. Scoring weights are illustrative and would be calibrated against real historical win-back outcomes in production.
+Single-file HTML/CSS/JS - no build step, no dependencies. Data is synthetic, generated with a seeded random function so results are reproducible. Scoring weights are illustrative and would be calibrated against real historical win-back outcomes in production.
 
 ## Part of a larger portfolio
 
