@@ -2,7 +2,7 @@
 
 An interactive tool that ranks churned customer accounts by likelihood of successful reactivation, then weighs that likelihood against account value to show a retention team where a win-back motion should actually spend its effort first.
 
-**[Live demo →](#)** (https://github.com/melissamcgowan/Win-Back-Re-engagement-Scorer/blob/main/winback_scorer.html)
+**[Live demo →](#)** (https://github.com/melissamcgowan/Win-Back-Re-engagement-Scorer)
 
 ## Why I built this
 
